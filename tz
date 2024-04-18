@@ -1,0 +1,36 @@
+Write HTTP server for a service that would make http requests to 3rd-party services.
+
+Work algorithm:
+The client sends a task to the service to perform an http request to a 3rd-party services. 
+The task is described in json format, the generated task id is returned in response and its execution starts in the background.
+The client must have a method that can be used to find out the status of the task.
+We'd like to see code close to production with clear variable names and http routes, unit tests, etc.
+
+Request examples to service:
+------------------------------------------------
+Request: POST /task
+{
+	"method": "GET",
+	"url": "http://google.com",
+	"headers": {
+	    "Authentication": "Basic bG9naW46cGFzc3dvcmQ=",
+	    ....
+	}
+}
+Response: 200 OK
+{
+	"id": <generated unique id>
+}
+ 
+------------------------------------------------
+Request: GET task/<taskId>
+Response: 200 OK
+{
+	"id": <unique id>,
+	"status": "done/in_process/error/new"
+	"httpStatusCode": <HTTP status of 3rd-party service response>,
+	"headers": {
+		<headers array from 3rd-party service response>
+	},
+	"length": <content length of 3rd-party service response>
+}
