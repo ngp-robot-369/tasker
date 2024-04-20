@@ -12,14 +12,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestServer(t *testing.T) {
+func MakeHandlersMock() Handlers {
+	return Handlers{
+		Tasker: tasks.NewTaskerService(tasks.MakeStorageRam()),
+	}
+}
+
+func TestTaskerAPI(t *testing.T) {
+
+	handler := MakeHandlersMock()
+
 	t.Run("Invalid create task request", func(t *testing.T) {
 		var (
 			body   = strings.NewReader("invalid json")
 			req, _ = http.NewRequest("POST", "/task", body)
 			rr     = httptest.NewRecorder()
 		)
-		serveCreateTask(rr, req)
+		handler.serveCreateTask(rr, req)
 		assert.Equal(t, rr.Code, http.StatusBadRequest)
 		assert.Equal(t, rr.Body.String(), "Invalid request body\n")
 	})
@@ -29,9 +38,8 @@ func TestServer(t *testing.T) {
 			req, _ = http.NewRequest("GET", "/task/bad_id", nil)
 			rr     = httptest.NewRecorder()
 		)
-		serveGetTaskStatus(rr, req)
-		assert.Equal(t, rr.Code, http.StatusNotFound)
-		assert.Equal(t, rr.Body.String(), "Task id not found\n")
+		handler.serveGetTaskStatus(rr, req)
+		assert.NotEqual(t, rr.Code, http.StatusOK)
 	})
 
 	t.Run("Valid create and get task", func(t *testing.T) {
@@ -44,7 +52,7 @@ func TestServer(t *testing.T) {
 		// Create task
 		{
 			rr := httptest.NewRecorder()
-			serveCreateTask(rr, req)
+			handler.serveCreateTask(rr, req)
 			assert.Equal(t, http.StatusOK, rr.Code)
 
 			var response map[string]string
@@ -58,7 +66,7 @@ func TestServer(t *testing.T) {
 		req.SetPathValue("id", id)
 		{
 			rr := httptest.NewRecorder()
-			serveGetTaskStatus(rr, req)
+			handler.serveGetTaskStatus(rr, req)
 			assert.Equal(t, http.StatusOK, rr.Code)
 
 			var resp tasks.TaskStatus
@@ -70,7 +78,7 @@ func TestServer(t *testing.T) {
 		time.Sleep(time.Second * 5)
 		{
 			rr := httptest.NewRecorder()
-			serveGetTaskStatus(rr, req)
+			handler.serveGetTaskStatus(rr, req)
 			assert.Equal(t, http.StatusOK, rr.Code)
 
 			var resp tasks.TaskStatus

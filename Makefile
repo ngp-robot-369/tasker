@@ -1,5 +1,5 @@
 build:
-	go build ./cli
+	go build ./cmd/...
 
 tests:
 	go test ./...
